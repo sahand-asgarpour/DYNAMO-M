@@ -84,14 +84,16 @@ class HouseholdBaseClass(AgentBaseClass):
         self.percentage_insured = None
         self.n_households_adapted = None
         self.perc_people_moved_out = 0
-        self.flood_tracker = 0
+        # Use numpy scalars so the reporter's value.item() works at the t=0
+        # snapshot (these become numpy floats once flood EAD is computed).
+        self.flood_tracker = np.int32(0)
         self.segment_IDs_admin = None
 
         self.summed_beach_amenity = 0
         self.beach_amenity_dict = {}
         # Initiate expected damages for all regions
-        self.ead_total = 0
-        self.ead_residential = 0
+        self.ead_total = np.float32(0)
+        self.ead_residential = np.float32(0)
         self.people_near_beach = 0
         self.households_near_beach = 0
 

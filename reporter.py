@@ -8,6 +8,11 @@ from copy import deepcopy
 
 class Reporter(Reporter):
     def __init__(self, model, subfolder: Union[None, str] = None) -> None:
+        # The installed honeybees Reporter stores the passed folder verbatim and
+        # no longer defaults to general:report_folder. Fall back to the config
+        # value (relative to the working dir) so export_folder is never None.
+        if subfolder is None:
+            subfolder = model.config['general'].get('report_folder', 'report')
         super().__init__(model, subfolder)
 
     def report(self) -> dict:

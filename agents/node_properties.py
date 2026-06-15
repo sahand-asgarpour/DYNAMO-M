@@ -225,8 +225,15 @@ class NodeProperties:
         return [household.ead_total for household in self.all_households]
 
     @property
+    def ead_total(self):
+        # Region-level reporting alias for `ead_nodes`: total EAD per node
+        # (residential + land-use). Matches the `ead_total` report varname.
+        return [household.ead_total for household in self.all_households]
+
+    @property
     def ead_residential_nodes(self):
         return [household.ead_residential for household in self.all_households]
+
 
     @property
     def ead_residential_land_use_nodes(self):

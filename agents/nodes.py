@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import pandas as pd
-import geopandas as gpd
 from honeybees.agents import AgentBaseClass
 from scipy.spatial import distance_matrix as sdistance_matrix
 from agents.coastal_nodes import CoastalNode
@@ -400,7 +399,7 @@ class Nodes(AgentBaseClass, NodeProperties):
             if self.model.current_time.year in [2016, 2020, 2040, 2060, 2080]:
                 self.export_agent_density()
                 # self.export_agent_exposure()
-            
+
         self.export_coastal_fps_dictionaries()
 
     def process_migration_matrices(self, merged_move_dictionary):

@@ -46,9 +46,15 @@ class SLRModel(Model):
 
         self.random_module = RandomNumberGenerator(model=self)
 
-        self.current_time = self.config['general']['start_time']
+        # NOTE: the installed honeybees exposes ``current_time`` and ``end_time`` as
+        # read-only properties derived from ``start_time`` + ``current_timestep`` *
+        # ``timestep_length``. (Older honeybees versions allowed direct assignment.)
+        # We therefore configure the backing attributes so the derived properties
+        # yield the intended config-driven values (yearly steps from start to end).
         self.timestep_length = relativedelta(years=1)
-        self.end_time = self.config['general']['end_time']
+        self.start_time = self.config['general']['start_time']
+        _end_time = self.config['general']['end_time']
+        self.n_timesteps = (_end_time.year - self.start_time.year) + 1
 
         # Only include spinuptime when run without GUI
         if not self.args.GUI:

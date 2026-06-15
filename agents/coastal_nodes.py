@@ -639,8 +639,23 @@ class CoastalNode(HouseholdBaseClass, CoastalNodeProperties):
         people_indices_per_household_fn = os.path.join(
             self.init_folder, "people_indices.npy")
         if os.path.exists(people_indices_per_household_fn):
-            self.people_indices_per_household = np.load(
-                people_indices_per_household_fn)
+            loaded_people_indices = np.load(people_indices_per_household_fn)
+            # The model allocates a fixed-width (max_household_size) slot array
+            # where -1 marks empty person slots. Precomputed household files may
+            # have been generated with a smaller max household size, so pad the
+            # trailing columns with -1 to match self.max_household_size.
+            loaded_width = loaded_people_indices.shape[1]
+            if loaded_width < self.max_household_size:
+                pad = np.full(
+                    (loaded_people_indices.shape[0],
+                     self.max_household_size - loaded_width),
+                    -1, dtype=loaded_people_indices.dtype)
+                loaded_people_indices = np.hstack([loaded_people_indices, pad])
+            elif loaded_width > self.max_household_size:
+                raise ValueError(
+                    f'people_indices.npy for {self.geom_id} has household width '
+                    f'{loaded_width} > max_household_size {self.max_household_size}')
+            self.people_indices_per_household = loaded_people_indices
 
         # fill array storing adaptation status and time since adaptation decision and flood experience
         self.time_adapt = 0
@@ -1972,11 +1987,11 @@ class CoastalNode(HouseholdBaseClass, CoastalNodeProperties):
         # Update the percentage of households implementing flood proofing
         # Check for missing data
         self.n_households_adapted = np.sum(self.adapt[self.adapt == 1])
-        # if self.n_households_exposed > 0:
-        #     self.percentage_adapted = round(
-        #         self.n_households_adapted / self.n_households_exposed * 100, 2)
-        # else:
-        #     self.percentage_adapted = 0
+        if self.n_households_exposed > 0:
+            self.percentage_adapted = round(
+                self.n_households_adapted / self.n_households_exposed * 100, 2)
+        else:
+            self.percentage_adapted = 0
 
         ### process insurance decisions ####
         # first reset insurance status to 0
@@ -2272,18 +2287,22 @@ class CoastalNode(HouseholdBaseClass, CoastalNodeProperties):
             self.n_households_that_would_have_moved = households_that_would_have_moved.size
             self.n_people_that_would_have_moved = self.size[households_that_would_have_moved].sum()
 
+            # process the adaptation decisions FIRST, so that flood-proofing /
+            # insurance uptake is recorded even when no households migrate
+            # (e.g. migration disabled). Previously this ran after the
+            # "no movers" early-return below, so with migration off the
+            # adaptation outputs were never populated.
+            self.process_household_decisions(
+                households_implementing_dry_floodproofing,
+                households_taking_up_insurance,
+                )
+
             # if no households are moving, return None
             if households_to_move.size == 0:
                 if self.model.args.low_memory_mode:
                     delattr(self, 'damages')
                     delattr(self, 'damages_dryproof_1m')
                 return None, None
-
-            # process the adaptation decisions
-            self.process_household_decisions(
-                households_implementing_dry_floodproofing,
-                households_taking_up_insurance,
-                )
         else:
             # If 0 households are present return None
             if self.model.args.low_memory_mode:

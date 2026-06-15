@@ -45,7 +45,12 @@ class Beaches(AgentBaseClass):
         # get change rates
         self.shoreline_change_trend = self.model.data.shoreline_change_trend.get_data_array()[self.indices_beach_cells]
         
-        if self.model.args.rcp == 'control': 
+        if self.model.args.rcp == 'control' or not self.model.settings['shoreline_change']['include_erosion']:
+            # No SLR-induced erosion needed (control scenario or erosion
+            # disabled in settings). The fitted polynomials are only consumed by
+            # process_shoreline_change(), which is itself gated on
+            # include_erosion, so a zero placeholder is sufficient and avoids
+            # fitting on potentially degenerate beach-loss samples.
             self.polynomials_slr_erosion = np.full((3, self.indices_beach_cells[0].size), 0 , np.float32)
         else: 
             self.shoreline_loss_2050_slr = self.model.data.shoreline_loss_2050.get_data_array()[self.indices_beach_cells]

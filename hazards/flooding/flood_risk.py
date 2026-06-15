@@ -627,6 +627,9 @@ class FloodRisk():
             else:
                 user_floods = {}
 
+            if verboise:
+                print(f"DEBUG: current_year={current_year}, type={type(current_year)}, user_floods={user_floods}")
+
             if current_year in user_floods.keys():
                 rt = user_floods[current_year]
                 if verboise:
@@ -640,6 +643,9 @@ class FloodRisk():
                 # Set flood timer to zero for those who experienced flooding
                 flood_timer[water_levels[np.where(
                     return_periods == rt)[0][0]] > 0] = 0
+                
+                if (rt >= fps_dikes).any():
+                    flood_tracker = np.int32(rt)
 
         risk_perceptions = risk_perc_max * \
             1.6 ** (risk_decr * flood_timer) + risk_perc_min

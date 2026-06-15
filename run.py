@@ -1,7 +1,4 @@
 from model import SLRModel
-from honeybees.visualization.canvas import Canvas
-from honeybees.visualization.modules import ChartModule
-from honeybees.visualization.ModularVisualization import ModularServer
 import os
 import numpy as np
 import faulthandler
@@ -64,6 +61,12 @@ if __name__ == '__main__':
 
     # if run with GUI create GUI and plots
     else:
+        # Imported lazily: the honeybees visualization stack pulls in tornado,
+        # which is only needed for the GUI and can fail to import in headless
+        # environments (e.g. Windows SSL cert-store issues).
+        from honeybees.visualization.canvas import Canvas
+        from honeybees.visualization.modules import ChartModule
+        from honeybees.visualization.ModularVisualization import ModularServer
         series_to_plot = [
             # [
             #     {"name": "ead_nodes",

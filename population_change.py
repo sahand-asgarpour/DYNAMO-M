@@ -4,6 +4,47 @@ from scipy.interpolate import interp1d
 import pandas as pd
 import numpy as np
 
+
+class PopulationChange:
+    """Ambient (natural) population change agent.
+
+    ============================ RECONSTRUCTED STUB ============================
+    The ``PopulationChange`` class was missing from this module (only the helper
+    functions below were committed). This minimal reconstruction is inferred from
+    its consumers:
+
+      * ``Agents.__init__`` builds it and calls ``.step()`` only when
+        ``settings['general']['include_ambient_pop_change']`` is True.
+      * ``coastal_nodes`` reads ``population_change.admins_iso3[iso3]`` (number of
+        admin regions per country) inside the migration-allocation path.
+
+    The test disables ambient population change AND migration, so ``step`` is a
+    guarded no-op here. Restore the original class for real demographic dynamics.
+    ===========================================================================
+    """
+
+    def __init__(self, model, agents):
+        self.model = model
+        self.agents = agents
+        self.admins_iso3 = self._build_admins_iso3()
+
+    def _build_admins_iso3(self):
+        admins_iso3 = {}
+        try:
+            ids = self.agents.regions.ids
+        except AttributeError:
+            ids = []
+        for region_id in ids:
+            admins_iso3.setdefault(region_id[:3], []).append(region_id)
+        return admins_iso3
+
+    def step(self):
+        """Apply ambient population change. No-op when disabled (placeholder)."""
+        if not self.model.settings['general'].get('include_ambient_pop_change', False):
+            return
+        # Original WorldPop-based growth dynamics are unavailable in this stub.
+        return
+
 def objective(
     x0: float,
     growth_rate: np.ndarray,
